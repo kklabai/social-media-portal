@@ -1,0 +1,10 @@
+user_email,ecosystem_name,assigned_by_email
+admin@example.com,Digital Government,
+admin@example.com,Tech Startup,
+manager@example.com,Healthcare Initiative,admin@example.com
+manager@example.com,Education Platform,admin@example.com
+user1@example.com,Digital Government,admin@example.com
+user1@example.com,Tech Startup,manager@example.com
+user2@example.com,Healthcare Initiative,manager@example.com
+user3@example.com,Education Platform,manager@example.com
+user3@example.com,Environmental Campaign,admin@example.com

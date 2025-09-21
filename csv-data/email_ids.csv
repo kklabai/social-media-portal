@@ -1,0 +1,8 @@
+email_address,ecosystem_name,primary_use,status,created_by,notes
+gov@digital.gov,Digital Government,Social Media Accounts,active,admin@example.com,Primary email for all government social accounts
+backup@digital.gov,Digital Government,Recovery Email,active,admin@example.com,Backup recovery email
+info@techstart.com,Tech Startup,General Contact,active,manager@example.com,Main contact email
+support@techstart.com,Tech Startup,Customer Support,active,manager@example.com,Support ticket system
+health@aware.org,Healthcare Initiative,Public Contact,active,manager@example.com,Public inquiries
+edu@platform.org,Education Platform,Admin Contact,active,manager@example.com,Administrative contact
+media@envcamp.org,Environmental Campaign,Media Relations,inactive,admin@example.com,Press and media inquiries

@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  name        String
+  ecitizen_id String?
+  role        String   @default("user") // user or admin
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relations
+  userEcosystems    UserEcosystem[]
+  credentialHistory CredentialHistory[] @relation("ChangedBy")
+  assignedBy        UserEcosystem[]     @relation("AssignedBy")
+}
+
+model Ecosystem {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  theme         String
+  description   String?
+  active_status Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  
+  // Relations
+  platforms       SocialMediaPlatform[]
+  userEcosystems  UserEcosystem[]
+}
+
+model UserEcosystem {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  ecosystem_id Int
+  assigned_by  Int?
+  assigned_at  DateTime @default(now())
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  
+  // Relations
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  ecosystem   Ecosystem @relation(fields: [ecosystem_id], references: [id], onDelete: Cascade)
+  assignedBy  User?     @relation("AssignedBy", fields: [assigned_by], references: [id])
+  
+  @@unique([user_id, ecosystem_id]) // Prevent duplicate assignments
+}
+
+model SocialMediaPlatform {
+  id                 Int      @id @default(autoincrement())
+  ecosystem_id       Int
+  platform_name      String
+  platform_type      String
+  account_status     String   @default("active")
+  profile_url        String?
+  profile_id         String?
+  username           String?  // Encrypted
+  password           String?  // Encrypted
+  email              String?
+  phone              String?
+  recovery_email     String?
+  recovery_phone     String?
+  two_fa_enabled     Boolean  @default(false)
+  totp_enabled       Boolean  @default(false)
+  totp_secret        String?  // Encrypted
+  bio                String?
+  profile_image_url  String?
+  cover_image_url    String?
+  verification_status String  @default("unverified")
+  notes              String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  last_checked       DateTime?
+  last_posted        DateTime?
+  followers_count    Int?
+  following_count    Int?
+  posts_count        Int?
+  
+  // Relations
+  ecosystem          Ecosystem           @relation(fields: [ecosystem_id], references: [id], onDelete: Cascade)
+  credentialHistory  CredentialHistory[]
+  
+  @@unique([ecosystem_id, platform_name])
+}
+
+model CredentialHistory {
+  id           Int      @id @default(autoincrement())
+  platform_id  Int
+  field_name   String
+  old_value    String?  // Encrypted
+  new_value    String?  // Encrypted
+  changed_by   Int
+  changed_at   DateTime @default(now())
+  created_at   DateTime @default(now())
+  
+  // Relations
+  platform     SocialMediaPlatform @relation(fields: [platform_id], references: [id], onDelete: Cascade)
+  changedBy    User                @relation("ChangedBy", fields: [changed_by], references: [id])
+}
+
+model EmailId {
+  id            Int      @id @default(autoincrement())
+  email_address String   @unique
+  ecosystem_name String?
+  primary_use   String?
+  status        String   @default("active")
+  created_by    String?
+  notes         String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model PlatformTemplate {
+  id                Int      @id @default(autoincrement())
+  platform_name     String   @unique
+  platform_category String
+  base_url          String?
+  name_format       String?
+  bio_format        String?
+  url_format        String?
+  notes             String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}

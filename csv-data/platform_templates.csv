@@ -1,0 +1,26 @@
+platform_name,platform_category,base_url,name_format,bio_format,url_format,notes
+YouTube,Video,https://youtube.com,@{username},Channel description,https://youtube.com/@{username},Video sharing platform
+Facebook,Social Network,https://facebook.com,{username},Page description,https://facebook.com/{username},Social networking
+Instagram,Photo Sharing,https://instagram.com,@{username},Bio text,https://instagram.com/{username},Photo and video sharing
+Twitter/X,Microblogging,https://x.com,@{username},Bio (160 chars),https://x.com/{username},Microblogging platform
+TikTok,Short Video,https://tiktok.com,@{username},Bio text,https://tiktok.com/@{username},Short-form video
+Pinterest,Visual Discovery,https://pinterest.com,{username},About section,https://pinterest.com/{username},Visual discovery engine
+LinkedIn,Professional Network,https://linkedin.com,company/{username},Company description,https://linkedin.com/company/{username},Professional networking
+Bluesky,Decentralized Social,https://bsky.app,@{username}.bsky.social,Bio text,https://bsky.app/profile/{username}.bsky.social,Decentralized social
+Threads,Text Updates,https://threads.net,@{username},Bio text,https://threads.net/@{username},Text-based conversations
+Reddit,Community Forum,https://reddit.com,u/{username},About section,https://reddit.com/user/{username},Community discussions
+Blogspot,Blogging,https://blogspot.com,{username},Blog description,https://{username}.blogspot.com,Blogging platform
+Mastodon,Federated Social,https://mastodon.social,@{username}@{instance},Bio text,https://{instance}/@{username},Federated social network
+Telegram,Messaging,https://t.me,@{username},Channel description,https://t.me/{username},Messaging and channels
+Nostr,Decentralized Protocol,https://nostr.com,{npub},Profile info,nostr:{npub},Decentralized protocol
+Lemmy,Link Aggregator,https://lemmy.ml,u/{username},User bio,https://{instance}/u/{username},Reddit alternative
+Warpcast,Web3 Social,https://warpcast.com,@{username},Profile bio,https://warpcast.com/{username},Web3 social platform
+Twitch,Live Streaming,https://twitch.tv,{username},Channel description,https://twitch.tv/{username},Live streaming platform
+DLive,Blockchain Streaming,https://dlive.tv,{username},Channel about,https://dlive.tv/{username},Blockchain streaming
+Trovo,Gaming Stream,https://trovo.live,{username},Channel bio,https://trovo.live/{username},Gaming streaming
+Kick,Streaming Platform,https://kick.com,{username},Channel bio,https://kick.com/{username},Streaming platform
+Rumble,Video Platform,https://rumble.com,c/{username},Channel description,https://rumble.com/c/{username},Video platform
+WhatsApp Channel,Messaging Channel,https://whatsapp.com,{channel_name},Channel description,https://whatsapp.com/channel/{channel_id},Broadcast channel
+Medium,Publishing,https://medium.com,@{username},Profile bio,https://medium.com/@{username},Publishing platform
+Quora,Q&A Platform,https://quora.com,{username},Profile description,https://quora.com/profile/{username},Q&A platform
+Discord,Community Chat,https://discord.com,{server_name},Server description,https://discord.gg/{invite_code},Community chat platform

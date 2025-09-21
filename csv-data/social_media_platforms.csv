@@ -1,0 +1,11 @@
+ecosystem_name,platform_name,platform_type,account_status,profile_url,username,password,email,profile_id,two_fa_enabled,totp_enabled,totp_secret,verification_status,notes
+Digital Government,YouTube,Video,active,https://youtube.com/@govdigital,govdigital,SecurePass123,gov@digital.gov,UC123456,true,false,,verified,Official government YouTube channel
+Digital Government,Facebook,Social Network,active,https://facebook.com/govdigital,govdigital,SecurePass123,gov@digital.gov,govdigital,true,false,,verified,Official government Facebook page
+Digital Government,Twitter/X,Microblogging,active,https://x.com/govdigital,@govdigital,SecurePass123,gov@digital.gov,govdigital,true,false,,verified,Official government X account
+Tech Startup,LinkedIn,Professional Network,active,https://linkedin.com/company/techstart,techstart,TechPass456,info@techstart.com,techstart-inc,true,true,,verified,Company LinkedIn page
+Tech Startup,Instagram,Photo Sharing,active,https://instagram.com/techstart,techstart,TechPass456,info@techstart.com,techstart,true,false,,verified,Product showcase Instagram
+Tech Startup,TikTok,Short Video,active,https://tiktok.com/@techstart,techstart,TechPass456,info@techstart.com,@techstart,false,false,,unverified,Tech content TikTok
+Healthcare Initiative,YouTube,Video,active,https://youtube.com/@healthaware,healthaware,HealthPass789,health@aware.org,UC789012,true,false,,verified,Health education YouTube
+Healthcare Initiative,Facebook,Social Network,active,https://facebook.com/healthaware,healthaware,HealthPass789,health@aware.org,healthaware,true,false,,verified,Health awareness Facebook
+Education Platform,Medium,Publishing,active,https://medium.com/@eduplatform,eduplatform,EduPass321,edu@platform.org,@eduplatform,true,false,,verified,Educational articles
+Education Platform,Quora,Q&A Platform,active,https://quora.com/profile/eduplatform,eduplatform,EduPass321,edu@platform.org,eduplatform,false,false,,unverified,Q&A engagement
