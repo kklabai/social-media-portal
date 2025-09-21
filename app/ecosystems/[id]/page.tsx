@@ -223,6 +223,24 @@ export default function EcosystemDetailPage() {
       {/* Platforms Section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ fontSize: '20px', fontWeight: '600' }}>Social Media Platforms</h2>
+        <Link
+          href={`/platforms/new?ecosystemId=${params.id}`}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: '#0066cc',
+            color: 'white',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            fontWeight: '500',
+            fontSize: '14px'
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>+</span>
+          New Platform
+        </Link>
       </div>
       
       {/* Search Bar */}

@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
     
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { name: { contains: search } },
+        { description: { contains: search } }
       ];
     }
     
-    if (theme) {
-      where.theme = { contains: theme, mode: 'insensitive' };
+    if (theme && theme !== 'all') {
+      where.theme = theme;
     }
     
     if (activeStatus !== null && activeStatus !== '') {
@@ -85,8 +85,15 @@ export async function GET(request: NextRequest) {
       take: limit
     });
 
+    // Format the response with additional counts
+    const formattedEcosystems = ecosystems.map(ecosystem => ({
+      ...ecosystem,
+      platform_count: ecosystem.platforms.length,
+      user_count: ecosystem.userEcosystems.length
+    }));
+
     return NextResponse.json({ 
-      list: ecosystems,
+      list: formattedEcosystems,
       pagination: {
         total,
         page,

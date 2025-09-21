@@ -1,15 +1,21 @@
-import SimpleSidebar from "./SimpleSidebar";
+"use client";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+import SimpleSidebar from "./SimpleSidebar";
+import { SidebarProvider, useSidebar } from "./SidebarContext";
+
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const { isCollapsed } = useSidebar();
+  
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
       <SimpleSidebar />
       <main style={{ 
         flex: 1,
-        marginLeft: '250px',
+        marginLeft: isCollapsed ? '60px' : '250px',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh'
+        minHeight: '100vh',
+        transition: 'margin-left 0.3s ease'
       }}>
         <div style={{ 
           flex: 1,
@@ -21,5 +27,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </SidebarProvider>
   );
 }

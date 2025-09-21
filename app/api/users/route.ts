@@ -39,9 +39,9 @@ export async function GET(request: NextRequest) {
     
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } },
-        { ecitizen_id: { contains: search, mode: 'insensitive' } }
+        { email: { contains: search } },
+        { name: { contains: search } },
+        { ecitizen_id: { contains: search } }
       ];
     }
     
@@ -69,8 +69,14 @@ export async function GET(request: NextRequest) {
       take: limit
     });
 
+    // Format users with ecosystem count
+    const formattedUsers = users.map(user => ({
+      ...user,
+      ecosystem_count: user.userEcosystems.length
+    }));
+
     return NextResponse.json({ 
-      list: users,
+      list: formattedUsers,
       pagination: {
         total,
         page,

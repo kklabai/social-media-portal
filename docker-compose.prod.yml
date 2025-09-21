@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  social-media-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: social-media-portal
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/prod.db
+      - NANDI_SSO_URL=${NANDI_SSO_URL}
+      - NANDI_APP_ID=${NANDI_APP_ID}
+      - NANDI_RETURN_URL=${NANDI_RETURN_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: social-media-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      social-media-portal:
+        condition: service_healthy
+    networks:
+      - internal
+      - external
+
+  # Optional: Certbot for SSL certificates
+  certbot:
+    image: certbot/certbot
+    container_name: social-media-certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email ${ADMIN_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN}
+    networks:
+      - external
+
+  # Optional: Backup service
+  backup:
+    image: alpine:latest
+    container_name: social-media-backup
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+    environment:
+      - BACKUP_SCHEDULE=${BACKUP_SCHEDULE:-0 2 * * *}
+    command: >
+      sh -c "
+      apk add --no-cache sqlite tar &&
+      echo '${BACKUP_SCHEDULE} cd /backups && sqlite3 /data/prod.db \".backup backup-\$$(date +%Y%m%d-%H%M%S).db\" && find /backups -name \"backup-*.db\" -mtime +7 -delete' | crontab - &&
+      crond -f
+      "
+    restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+    internal: true
+  external:
+    driver: bridge
