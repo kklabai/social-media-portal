@@ -18,16 +18,15 @@ A comprehensive web application for managing social media accounts across multip
 
 - **Frontend**: Next.js 14 with TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes
-- **Database**: NocoDB (REST API-based database)
+- **Database**: SQLite with Prisma ORM
 - **Authentication**: Nandi SSO
-- **Security**: AES-256 encryption, bcrypt for passwords, TOTP (RFC 6238)
+- **Security**: AES-256 encryption, TOTP (RFC 6238)
 
 ## Setup Instructions
 
 ### 1. Prerequisites
 
 - Node.js 18+ and npm
-- NocoDB instance running
 - Nandi Auth credentials
 
 ### 2. Environment Configuration
@@ -35,19 +34,13 @@ A comprehensive web application for managing social media accounts across multip
 Create a `.env.local` file with your configuration:
 
 ```env
-# NocoDB Configuration
-NEXT_PUBLIC_NOCODB_API_URL=http://localhost:8080/api/v1
-NOCODB_API_TOKEN=your_nocodb_api_token
-NEXT_PUBLIC_NOCODB_PROJECT_ID=your_project_id
+# Nandi SSO Configuration
+NANDI_SSO_URL=your_nandi_sso_url
+NANDI_APP_ID=your_app_id
+NANDI_RETURN_URL=http://localhost:3001/api/auth/sso/callback
 
-# Nandi Auth Configuration
-NEXT_AUTH_URL=https://auth.kailasa.ai
-NEXT_AUTH_CLIENT_ID=your_client_id
-AUTH_CLIENT_SECRET=your_client_secret
-NEXT_BASE_URL=http://localhost:3000
-NEXT_PUBLIC_AUTH_URL=https://auth.kailasa.ai
-NEXT_PUBLIC_AUTH_CLIENT_ID=your_client_id
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+# Application URL
+NEXTAUTH_URL=http://localhost:3001
 
 # Encryption Key (32 characters)
 ENCRYPTION_KEY=your_32_character_encryption_key
@@ -59,20 +52,30 @@ ENCRYPTION_KEY=your_32_character_encryption_key
 # Install dependencies
 npm install
 
+# Initialize database
+npx prisma migrate dev
+npx prisma generate
+
+# Import sample data (optional)
+npx ts-node prisma/import-from-csv.ts
+
 # Run development server
 npm run dev
+
+# Run on port 3001
+./start-on-3001.sh
 
 # Build for production
 npm run build
 npm start
 ```
 
-### 4. NocoDB Setup
+### 4. Database Schema
 
-Create the following tables in NocoDB:
+The application uses SQLite with Prisma ORM. The database schema includes:
 
 1. **users**
-   - id (UUID, Primary Key)
+   - id (Integer, Primary Key, Auto-increment)
    - ecitizen_id (String, Unique)
    - name (String)
    - email (String, Unique)
@@ -81,8 +84,8 @@ Create the following tables in NocoDB:
    - updated_at (DateTime)
 
 2. **ecosystems**
-   - id (UUID, Primary Key)
-   - name (String)
+   - id (Integer, Primary Key, Auto-increment)
+   - name (String, Unique)
    - theme (String)
    - description (String, Optional)
    - active_status (Boolean)
@@ -91,17 +94,17 @@ Create the following tables in NocoDB:
    - updated_at (DateTime)
 
 3. **user_ecosystems**
-   - id (UUID, Primary Key)
-   - user_id (UUID, Foreign Key)
-   - ecosystem_id (UUID, Foreign Key)
-   - assigned_by (UUID, Foreign Key)
+   - id (Integer, Primary Key, Auto-increment)
+   - user_id (Integer, Foreign Key)
+   - ecosystem_id (Integer, Foreign Key)
+   - assigned_by (Integer, Foreign Key)
    - assigned_at (DateTime)
    - created_at (DateTime)
    - updated_at (DateTime)
 
 4. **social_media_platforms**
-   - id (UUID, Primary Key)
-   - ecosystem_id (UUID, Foreign Key)
+   - id (Integer, Primary Key, Auto-increment)
+   - ecosystem_id (Integer, Foreign Key)
    - platform_name (String)
    - platform_type (String)
    - profile_id (String)
@@ -116,17 +119,17 @@ Create the following tables in NocoDB:
    - updated_at (DateTime)
 
 5. **credential_history**
-   - id (UUID, Primary Key)
-   - platform_id (UUID, Foreign Key)
+   - id (Integer, Primary Key, Auto-increment)
+   - platform_id (Integer, Foreign Key)
    - field_name (String)
    - old_value (String, Encrypted)
    - new_value (String, Encrypted)
-   - changed_by (UUID, Foreign Key)
+   - changed_by (Integer, Foreign Key)
    - changed_at (DateTime)
 
 6. **email_ids**
-   - id (UUID, Primary Key)
-   - user_id (UUID, Foreign Key)
+   - id (Integer, Primary Key, Auto-increment)
+   - user_id (Integer, Foreign Key)
    - email (String)
    - purpose (String)
    - is_primary (Boolean)
@@ -135,7 +138,7 @@ Create the following tables in NocoDB:
    - updated_at (DateTime)
 
 7. **platform_templates**
-   - id (UUID, Primary Key)
+   - id (Integer, Primary Key, Auto-increment)
    - platform_type (String, Unique)
    - custom_fields (JSON)
    - created_at (DateTime)
@@ -171,6 +174,24 @@ Create the following tables in NocoDB:
 - `/api/platforms/[id]/totp/*` - TOTP management
 - `/api/platforms/[id]/check-link` - Link verification
 - `/api/platforms/[id]/history` - Credential history
+
+## CSV Import
+
+The application supports bulk data import via CSV files. Sample files are provided in the `csv-data/` directory:
+- `users.csv` - User accounts
+- `ecosystems.csv` - Ecosystem definitions
+- `social_media_platforms.csv` - Platform credentials
+- `user_ecosystems.csv` - User-ecosystem assignments
+- `email_ids.csv` - Email addresses
+- `platform_templates.csv` - Platform templates
+
+## Production Features
+
+- **Pagination**: Server-side pagination for handling large datasets
+- **Search**: Real-time search across all entities
+- **Filtering**: Advanced filtering options for users, ecosystems, and platforms
+- **Performance**: Optimized queries with Prisma ORM
+- **Scalability**: SQLite for development, easily migrate to PostgreSQL/MySQL for production
 
 ## Future Enhancements
 
