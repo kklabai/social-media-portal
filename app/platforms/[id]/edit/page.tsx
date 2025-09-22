@@ -98,7 +98,7 @@ export default function PlatformEditPage() {
       setLoading(false);
       router.push("/ecosystems");
     }
-  }, [router]);
+  }, [params.id, router]);
 
   const checkPermissions = useCallback(async () => {
     try {
