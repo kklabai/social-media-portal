@@ -4,16 +4,74 @@ import { parse } from 'csv-parse/sync';
 import { encrypt } from '../lib/utils/encryption';
 import path from 'path';
 
+// Define additional CSV record types for remaining functions
+interface PlatformTemplateCSVRecord {
+  template_name: string;
+  platform_name?: string;
+  platform_type: string;
+  category: string;
+  platform_category?: string;
+  base_url?: string;
+  name_format?: string;
+  bio_format?: string;
+  url_format?: string;
+  requires_prefix?: string;
+  note?: string;
+  notes?: string;
+}
+
+interface PlatformCSVRecord {
+  ecosystem_name: string;
+  platform_name: string;
+  platform_type: string;
+  profile_id?: string;
+  username?: string;
+  password?: string;
+  profile_url?: string;
+  totp_enabled: string;
+  totp_secret?: string;
+  changed_by_email?: string;
+  account_status?: string;
+  email?: string;
+  two_fa_enabled?: string;
+  verification_status?: string;
+  notes?: string;
+}
+
+interface EmailTemplateCSVRecord {
+  template_type: string;
+  subject: string;
+  body: string;
+  active: string;
+}
+
+interface EmailIdCSVRecord {
+  email_address: string;
+  ecosystem_name?: string;
+  primary_use?: string;
+  status?: string;
+  created_by?: string;
+  notes?: string;
+}
+
 const prisma = new PrismaClient();
 
 async function importUsers(csvPath: string) {
   console.log('📥 Importing users...');
   const fileContent = readFileSync(csvPath, 'utf-8');
+  
+  interface CSVRecord {
+    email: string;
+    name: string;
+    ecitizen_id?: string;
+    role: string;
+  }
+
   const records = parse(fileContent, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  });
+  }) as CSVRecord[];
 
   for (const record of records) {
     await prisma.user.upsert({
@@ -38,11 +96,19 @@ async function importUsers(csvPath: string) {
 async function importEcosystems(csvPath: string) {
   console.log('📥 Importing ecosystems...');
   const fileContent = readFileSync(csvPath, 'utf-8');
+  
+  interface EcosystemCSVRecord {
+    name: string;
+    theme: string;
+    description?: string;
+    active_status: string;
+  }
+  
   const records = parse(fileContent, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  });
+  }) as EcosystemCSVRecord[];
 
   for (const record of records) {
     await prisma.ecosystem.upsert({
@@ -67,11 +133,18 @@ async function importEcosystems(csvPath: string) {
 async function importUserEcosystems(csvPath: string) {
   console.log('📥 Importing user-ecosystem assignments...');
   const fileContent = readFileSync(csvPath, 'utf-8');
+  
+  interface UserEcosystemCSVRecord {
+    user_email: string;
+    ecosystem_name: string;
+    assigned_by_email?: string;
+  }
+  
   const records = parse(fileContent, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  });
+  }) as UserEcosystemCSVRecord[];
 
   for (const record of records) {
     // Find user by email
@@ -132,31 +205,31 @@ async function importPlatformTemplates(csvPath: string) {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  });
+  }) as PlatformTemplateCSVRecord[];
 
   for (const record of records) {
     await prisma.platformTemplate.upsert({
-      where: { platform_name: record.platform_name },
+      where: { platform_name: record.template_name },
       update: {
         platform_category: record.platform_category,
         base_url: record.base_url || null,
         name_format: record.name_format || null,
         bio_format: record.bio_format || null,
         url_format: record.url_format || null,
-        notes: record.notes || null,
+        notes: record.notes || record.note || null,
         updated_at: new Date(),
       },
       create: {
-        platform_name: record.platform_name,
-        platform_category: record.platform_category,
+        platform_name: record.platform_name || record.template_name,
+        platform_category: record.platform_category || record.category,
         base_url: record.base_url || null,
         name_format: record.name_format || null,
         bio_format: record.bio_format || null,
         url_format: record.url_format || null,
-        notes: record.notes || null,
+        notes: (record as any).notes || null,
       },
     });
-    console.log(`✓ Platform template: ${record.platform_name}`);
+    console.log(`✓ Platform template: ${record.platform_name || record.template_name}`);
   }
 }
 
@@ -167,7 +240,7 @@ async function importSocialMediaPlatforms(csvPath: string) {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  });
+  }) as PlatformCSVRecord[];
 
   for (const record of records) {
     // Find ecosystem by name
@@ -188,35 +261,35 @@ async function importSocialMediaPlatforms(csvPath: string) {
         },
       },
       update: {
-        platform_type: record.platform_type || null,
+        platform_type: record.platform_type || undefined,
         account_status: record.account_status || 'active',
-        profile_url: record.profile_url || null,
-        username: record.username ? encrypt(record.username) : null,
-        password: record.password ? encrypt(record.password) : null,
-        email: record.email || null,
-        profile_id: record.profile_id || null,
+        profile_url: record.profile_url || undefined,
+        username: record.username ? encrypt(record.username) : undefined,
+        password: record.password ? encrypt(record.password) : undefined,
+        email: record.email || undefined,
+        profile_id: record.profile_id || undefined,
         two_fa_enabled: record.two_fa_enabled === 'true',
         totp_enabled: record.totp_enabled === 'true',
-        totp_secret: record.totp_secret ? encrypt(record.totp_secret) : null,
-        verification_status: record.verification_status || null,
-        notes: record.notes || null,
+        totp_secret: record.totp_secret ? encrypt(record.totp_secret) : undefined,
+        verification_status: record.verification_status || undefined,
+        notes: record.notes || undefined,
         updated_at: new Date(),
       },
       create: {
         ecosystem_id: ecosystem.id,
         platform_name: record.platform_name,
-        platform_type: record.platform_type || null,
+        platform_type: record.platform_type || 'Unknown',
         account_status: record.account_status || 'active',
-        profile_url: record.profile_url || null,
-        username: record.username ? encrypt(record.username) : null,
-        password: record.password ? encrypt(record.password) : null,
-        email: record.email || null,
-        profile_id: record.profile_id || null,
+        profile_url: record.profile_url || undefined,
+        username: record.username ? encrypt(record.username) : undefined,
+        password: record.password ? encrypt(record.password) : undefined,
+        email: record.email || undefined,
+        profile_id: record.profile_id || undefined,
         two_fa_enabled: record.two_fa_enabled === 'true',
         totp_enabled: record.totp_enabled === 'true',
-        totp_secret: record.totp_secret ? encrypt(record.totp_secret) : null,
-        verification_status: record.verification_status || null,
-        notes: record.notes || null,
+        totp_secret: record.totp_secret ? encrypt(record.totp_secret) : undefined,
+        verification_status: record.verification_status || undefined,
+        notes: record.notes || undefined,
       },
     });
     console.log(`✓ Platform: ${record.platform_name} for ${record.ecosystem_name}`);
@@ -230,7 +303,7 @@ async function importEmailIds(csvPath: string) {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  });
+  }) as EmailIdCSVRecord[];
 
   for (const record of records) {
     await prisma.emailId.upsert({

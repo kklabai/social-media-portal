@@ -122,7 +122,12 @@ export async function GET(request: NextRequest) {
 
     // Create matrix data
     const matrix = ecosystemsWithPlatforms.map(ecosystem => {
-      const platformMap: Record<string, any> = {};
+      const platformMap: Record<string, {
+        configured: boolean;
+        hasCredentials: boolean;
+        totpEnabled: boolean;
+        count: number;
+      }> = {};
       
       // Initialize all standard platforms as not configured
       standardPlatformTypes.forEach(platformType => {
@@ -181,7 +186,7 @@ export async function GET(request: NextRequest) {
       
       // Count configured standard platforms
       let totalConfigured = 0;
-      Object.values(platformMap).forEach((platform: any) => {
+      Object.values(platformMap).forEach((platform) => {
         if (platform.configured) {
           totalConfigured++;
         }

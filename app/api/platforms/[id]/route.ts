@@ -178,7 +178,14 @@ export async function PUT(
     
     // Use transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
-      const updateData: any = {
+      interface UpdateData {
+        updated_at: Date;
+        username?: string;
+        password?: string;
+        [key: string]: unknown;
+      }
+      
+      const updateData: UpdateData = {
         ...otherFields,
         updated_at: new Date(),
       };

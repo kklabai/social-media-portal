@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let whereClause: any = {};
+    const whereClause: { platform_id?: number | { in: number[] } } = {};
     
     // If platformId is provided, fetch credential history for that platform
     if (platformId) {

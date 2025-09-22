@@ -15,11 +15,13 @@ import {
   Wifi
 } from "lucide-react";
 
+import { LucideIcon } from "lucide-react";
+
 export interface PlatformConfig {
   name: string;
   type: string;
   url: string;
-  icon?: any;
+  icon?: LucideIcon;
   color?: string;
 }
 

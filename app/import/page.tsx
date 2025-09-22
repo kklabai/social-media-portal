@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -21,11 +21,7 @@ export default function ImportPage() {
   const [result, setResult] = useState<ImportResult | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
-  useEffect(() => {
-    checkPermissions();
-  }, []);
-
-  const checkPermissions = async () => {
+  const checkPermissions = useCallback(async () => {
     try {
       const sessionRes = await fetch("/api/auth/session");
       if (!sessionRes.ok) {
@@ -42,7 +38,11 @@ export default function ImportPage() {
       console.error("Permission check failed:", error);
       router.push("/dashboard");
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkPermissions();
+  }, [checkPermissions]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -196,11 +196,7 @@ export default function ImportPage() {
                 borderRadius: '8px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                boxShadow: selectedType === item.type ? '0 4px 6px rgba(0,0,0,0.1)' : '0 2px 4px rgba(0,0,0,0.05)',
-                ':hover': {
-                  borderColor: '#0066cc',
-                  transform: 'translateY(-2px)'
-                }
+                boxShadow: selectedType === item.type ? '0 4px 6px rgba(0,0,0,0.1)' : '0 2px 4px rgba(0,0,0,0.05)'
               }}
               onMouseEnter={(e) => {
                 if (selectedType !== item.type) {

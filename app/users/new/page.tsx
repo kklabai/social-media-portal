@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -15,11 +15,7 @@ export default function NewUserPage() {
     role: "user",
   });
 
-  useEffect(() => {
-    checkPermissions();
-  }, []);
-
-  const checkPermissions = async () => {
+  const checkPermissions = useCallback(async () => {
     try {
       const sessionRes = await fetch("/api/auth/session");
       if (!sessionRes.ok) {
@@ -38,7 +34,11 @@ export default function NewUserPage() {
       console.error("Permission check failed:", error);
       router.push("/dashboard");
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkPermissions();
+  }, [checkPermissions]);
 
   if (checkingAuth) {
     return (

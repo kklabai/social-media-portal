@@ -90,12 +90,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const assignments = await nocodb.list(TABLES.USER_ECOSYSTEMS, {
-      where: `(user_id,eq,${user_id})~and(ecosystem_id,eq,${ecosystem_id})`,
+    const deleted = await prisma.userEcosystem.deleteMany({
+      where: {
+        user_id: parseInt(user_id),
+        ecosystem_id: parseInt(ecosystem_id)
+      }
     });
 
-    if (assignments.list && assignments.list.length > 0) {
-      await nocodb.delete(TABLES.USER_ECOSYSTEMS, assignments.list[0].id);
+    if (deleted.count > 0) {
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json(

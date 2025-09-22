@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function EcosystemDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [ecosystem, setEcosystem] = useState<any>(null);
-  const [platforms, setPlatforms] = useState<any[]>([]);
+  const [ecosystem, setEcosystem] = useState<{ id: number; name: string; theme: string; description?: string; active_status?: boolean } | null>(null);
+  const [platforms, setPlatforms] = useState<Array<{ id: number; Id?: number; platform_name: string; platform_type: string; username?: string; password?: string; profile_url?: string; totp_enabled: boolean }>>([]);
   const [loading, setLoading] = useState(true);
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: number; role: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -21,27 +21,7 @@ export default function EcosystemDetailPage() {
     totalPages: 1
   });
 
-  useEffect(() => {
-    // Get user session first
-    fetch("/api/auth/session")
-      .then(res => res.json())
-      .then(session => {
-        if (session.user) {
-          setUser(session.user);
-        }
-        if (params.id !== 'new') {
-          loadEcosystemData();
-        }
-      });
-  }, [params.id]);
-
-  useEffect(() => {
-    if (params.id && params.id !== 'new' && ecosystem) {
-      loadPlatforms();
-    }
-  }, [searchTerm, currentPage]);
-
-  const loadPlatforms = async () => {
+  const loadPlatforms = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams({
         ecosystemId: String(params.id),
@@ -68,9 +48,9 @@ export default function EcosystemDetailPage() {
     } catch (error) {
       console.error("Error loading platforms:", error);
     }
-  };
+  }, [params.id, currentPage, searchTerm]);
 
-  const loadEcosystemData = async () => {
+  const loadEcosystemData = useCallback(async () => {
     try {
       if (!params.id || params.id === 'undefined') {
         console.error("Invalid ecosystem ID:", params.id);
@@ -93,9 +73,30 @@ export default function EcosystemDetailPage() {
       console.error("Error loading ecosystem:", error);
       setLoading(false);
     }
-  };
+  }, [params.id, loadPlatforms]);
 
-  const togglePasswordVisibility = (platformId: string) => {
+  useEffect(() => {
+    // Get user session first
+    fetch("/api/auth/session")
+      .then(res => res.json())
+      .then(session => {
+        if (session.user) {
+          setUser(session.user);
+        }
+        if (params.id !== 'new') {
+          loadEcosystemData();
+        }
+      });
+  }, [params.id, loadEcosystemData]);
+
+  useEffect(() => {
+    if (params.id && params.id !== 'new' && ecosystem) {
+      loadPlatforms();
+    }
+  }, [searchTerm, currentPage, ecosystem, loadPlatforms, params.id]);
+
+  const togglePasswordVisibility = (platformId: number | undefined) => {
+    if (!platformId) return;
     setShowPasswords(prev => ({
       ...prev,
       [platformId]: !prev[platformId]
@@ -375,7 +376,7 @@ export default function EcosystemDetailPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ fontSize: '13px', color: '#666', minWidth: '80px' }}>Password:</span>
                   <span style={{ fontSize: '13px', fontFamily: 'monospace' }}>
-                    {showPasswords[platform.id || platform.Id] ? platform.password : '••••••••'}
+                    {showPasswords[platform.id || platform.Id || 0] ? platform.password : '••••••••'}
                   </span>
                   <button
                     onClick={() => togglePasswordVisibility(platform.id || platform.Id)}
@@ -388,7 +389,7 @@ export default function EcosystemDetailPage() {
                       fontSize: '11px'
                     }}
                   >
-                    {showPasswords[platform.id || platform.Id] ? 'Hide' : 'Show'}
+                    {showPasswords[platform.id || platform.Id || 0] ? 'Hide' : 'Show'}
                   </button>
                 </div>
               )}

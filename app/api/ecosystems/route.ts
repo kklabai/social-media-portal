@@ -36,7 +36,14 @@ export async function GET(request: NextRequest) {
     
     const skip = (page - 1) * limit;
 
-    let where: any = {};
+    interface WhereClause {
+      OR?: Array<{ name?: { contains: string } | undefined; description?: { contains: string } | undefined }>;
+      theme?: string;
+      active_status?: boolean;
+      id?: { in: number[] };
+    }
+    
+    const where: WhereClause = {};
     
     if (search) {
       where.OR = [
@@ -147,10 +154,10 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(ecosystem, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating ecosystem:', error);
     
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Ecosystem with this name already exists' },
         { status: 400 }

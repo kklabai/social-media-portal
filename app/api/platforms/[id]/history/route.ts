@@ -69,7 +69,7 @@ export async function GET(
         platform_id: parseInt(id)
       },
       include: {
-        changedByUser: {
+        changedBy: {
           select: {
             id: true,
             name: true,
@@ -89,7 +89,7 @@ export async function GET(
         decrypt(record.old_value) : record.old_value,
       new_value: record.field_name !== 'profile_id' && record.new_value ? 
         decrypt(record.new_value) : record.new_value,
-      changed_by_user: record.changedByUser
+      changed_by_user: record.changedBy
     }));
 
     return NextResponse.json({ list: decryptedHistory });

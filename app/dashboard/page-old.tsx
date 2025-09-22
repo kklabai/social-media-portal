@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Globe, Shield, Users, Activity, TrendingUp, UserCheck, Clock, BarChart3 } from "lucide-react";
+import { Globe, Shield, Users, Activity, Clock, BarChart3 } from "lucide-react";
 
 interface DashboardStats {
   ecosystems: number;
@@ -21,7 +21,7 @@ export default function DashboardPage() {
     activeLinks: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ name: string; role?: string } | null>(null);
 
   useEffect(() => {
     // Check authentication
@@ -107,7 +107,13 @@ export default function DashboardPage() {
     },
   ];
 
-  const recentActivities: any[] = []; // No fake data
+  interface Activity {
+    icon: typeof Clock;
+    text: string;
+    time: string;
+    color: string;
+  }
+  const recentActivities: Activity[] = []; // No fake data
 
   return (
     <div>

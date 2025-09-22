@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 // This is a temporary workaround for the LinkToAnotherRecord issue
 // It creates a simple record that can be manually linked in NocoDB UI
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
-    const { userId, ecosystemId } = await request.json();
+    const { userId, ecosystemId } = await _request.json();
     
     const message = `
     Due to NocoDB LinkToAnotherRecord configuration, automatic assignment is not working.
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       manual_intervention_required: true,
       instructions: message
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to process request" },
       { status: 500 }

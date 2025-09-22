@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function EditEcosystemPage() {
@@ -15,15 +15,7 @@ export default function EditEcosystemPage() {
     active_status: true,
   });
 
-  useEffect(() => {
-    if (params.id && params.id !== 'new') {
-      loadEcosystem();
-    } else {
-      setLoading(false);
-    }
-  }, [params.id]);
-
-  const loadEcosystem = async () => {
+  const loadEcosystem = useCallback(async () => {
     try {
       const response = await fetch(`/api/ecosystems/${params.id}`);
       if (response.ok) {
@@ -40,7 +32,15 @@ export default function EditEcosystemPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    if (params.id && params.id !== 'new') {
+      loadEcosystem();
+    } else {
+      setLoading(false);
+    }
+  }, [params.id, loadEcosystem]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

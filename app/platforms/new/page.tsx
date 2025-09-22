@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function NewPlatformPage() {
+function NewPlatformContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ecosystemId = searchParams.get('ecosystemId');
   
-  const [ecosystem, setEcosystem] = useState<any>(null);
+  const [ecosystem, setEcosystem] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [, setCurrentUser] = useState<{ id: number; dbId?: number; role: string } | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({
     platform_name: "",
@@ -27,7 +27,7 @@ export default function NewPlatformPage() {
 
   useEffect(() => {
     checkPermissions();
-  }, [ecosystemId]);
+  }, [ecosystemId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkPermissions = async () => {
     try {
@@ -58,7 +58,7 @@ export default function NewPlatformPage() {
     }
   };
 
-  const loadEcosystem = async (user: any) => {
+  const loadEcosystem = async (user: { dbId?: number; role: string }) => {
     try {
       const res = await fetch(`/api/ecosystems/${ecosystemId}`);
       if (!res.ok) {
@@ -74,7 +74,7 @@ export default function NewPlatformPage() {
         const userEcosystems = userEcoData.list || [];
         
         const hasAccess = userEcosystems.some(
-          (ue: any) => ue.id === ecosystemData.id
+          (ue: { id: number }) => ue.id === ecosystemData.id
         );
         
         if (!hasAccess) {
@@ -147,20 +147,6 @@ export default function NewPlatformPage() {
     { name: "Discord", category: "Community Chat", urlFormat: "https://discord.gg/{invite_code}", note: "Use invite code, not username" }
   ];
 
-  const handlePlatformSelect = (platformName: string) => {
-    const platform = standardPlatforms.find(p => p.name === platformName);
-    if (platform) {
-      setFormData({
-        ...formData,
-        platform_name: `${ecosystem?.name} ${platform.name}`,
-        platform_type: platform.name
-      });
-      // Auto-generate URL if username is provided
-      if (formData.username && platform.urlFormat) {
-        generateProfileUrl(formData.username, platform);
-      }
-    }
-  };
 
   const generateProfileUrl = (username?: string, platformOverride?: typeof standardPlatforms[0]) => {
     const platform = platformOverride || standardPlatforms.find(p => p.name === formData.platform_type);
@@ -289,7 +275,7 @@ export default function NewPlatformPage() {
                   {formData.platform_type && (
                     <>
                       <p style={{ fontSize: '13px', color: '#666', marginTop: '0.5rem' }}>
-                        Platform name will be: "{ecosystem?.name} {formData.platform_type}"
+                        Platform name will be: &quot;{ecosystem?.name} {formData.platform_type}&quot;
                       </p>
                       {standardPlatforms.find(p => p.name === formData.platform_type)?.note && (
                         <p style={{ fontSize: '12px', color: '#0066cc', marginTop: '0.25rem', fontStyle: 'italic' }}>
@@ -492,5 +478,13 @@ export default function NewPlatformPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewPlatformPage() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>Loading...</div>}>
+      <NewPlatformContent />
+    </Suspense>
   );
 }

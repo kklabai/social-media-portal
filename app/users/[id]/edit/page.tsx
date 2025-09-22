@@ -1,24 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function EditUserPage() {
   const params = useParams();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [ecosystems, setEcosystems] = useState<any[]>([]);
+  interface UserData {
+    name: string;
+    email: string;
+    ecitizen_id?: string;
+    role: string;
+  }
+  interface EcosystemData {
+    id?: number;
+    Id?: number;
+    name: string;
+    theme: string;
+    active_status: boolean;
+  }
+  const [user, setUser] = useState<UserData | null>(null);
+  const [ecosystems, setEcosystems] = useState<EcosystemData[]>([]);
   const [assignedEcosystems, setAssignedEcosystems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  useEffect(() => {
-    checkPermissions();
+  const loadUserData = useCallback(async () => {
+    try {
+      // Get user data
+      const userRes = await fetch(`/api/users/${params.id}`);
+      const userData = await userRes.json();
+      setUser(userData);
+
+      // Get assigned ecosystems
+      const assignRes = await fetch(`/api/users/${params.id}/ecosystems`);
+      const assignData = await assignRes.json();
+      console.log("Loaded ecosystem assignments:", assignData);
+      // Ensure ecosystem IDs are strings for comparison
+      setAssignedEcosystems(assignData.ecosystemIds?.map((id: number) => String(id)) || []);
+    } catch (error) {
+      console.error("Error loading user:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [params.id]);
 
-  const checkPermissions = async () => {
+  const loadEcosystems = useCallback(async () => {
+    try {
+      const res = await fetch("/api/ecosystems");
+      const data = await res.json();
+      setEcosystems(data.list || []);
+    } catch (error) {
+      console.error("Error loading ecosystems:", error);
+    }
+  }, []);
+
+  const checkPermissions = useCallback(async () => {
     try {
       const sessionRes = await fetch("/api/auth/session");
       if (!sessionRes.ok) {
@@ -39,37 +78,11 @@ export default function EditUserPage() {
       console.error("Permission check failed:", error);
       router.push("/dashboard");
     }
-  };
+  }, [router, loadUserData, loadEcosystems]);
 
-  const loadUserData = async () => {
-    try {
-      // Get user data
-      const userRes = await fetch(`/api/users/${params.id}`);
-      const userData = await userRes.json();
-      setUser(userData);
-
-      // Get assigned ecosystems
-      const assignRes = await fetch(`/api/users/${params.id}/ecosystems`);
-      const assignData = await assignRes.json();
-      console.log("Loaded ecosystem assignments:", assignData);
-      // Ensure ecosystem IDs are strings for comparison
-      setAssignedEcosystems(assignData.ecosystemIds?.map(id => String(id)) || []);
-    } catch (error) {
-      console.error("Error loading user:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadEcosystems = async () => {
-    try {
-      const res = await fetch("/api/ecosystems");
-      const data = await res.json();
-      setEcosystems(data.list || []);
-    } catch (error) {
-      console.error("Error loading ecosystems:", error);
-    }
-  };
+  useEffect(() => {
+    checkPermissions();
+  }, [params.id, checkPermissions]);
 
   const handleSave = async () => {
     setSaving(true);

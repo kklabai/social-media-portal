@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { 
   Home, 
   Globe, 
   Users, 
-  Shield, 
-  Settings,
-  Key,
   Mail,
   LogOut,
   ChevronDown,
@@ -19,14 +17,14 @@ import { useState, useEffect } from "react";
 interface MenuItem {
   href?: string;
   label: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   children?: MenuItem[];
 }
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ name: string; email: string; role: string; image?: string } | null>(null);
 
   useEffect(() => {
     // Fetch real user data
@@ -82,10 +80,12 @@ export default function Sidebar() {
         <div className="p-4" style={{ borderBottom: '1px solid var(--border-light)' }}>
           <div className="flex items-center gap-3">
             {user.image ? (
-              <img 
+              <Image 
                 src={user.image} 
                 alt={user.name}
-                className="w-10 h-10 rounded-full"
+                width={40}
+                height={40}
+                className="rounded-full"
               />
             ) : (
               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: '#e8f0fe' }}>

@@ -108,10 +108,10 @@ export async function PUT(
     });
     
     return NextResponse.json(updated);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating user:", error);
     
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 400 }

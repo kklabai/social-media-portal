@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Ecosystem } from "@/lib/types";
 
@@ -17,33 +17,9 @@ export default function EcosystemsPage() {
     limit: 20,
     totalPages: 1
   });
-  const [user, setUser] = useState<any>(null);
-  const [users, setUsers] = useState<any[]>([]);
-  const [userAssignments, setUserAssignments] = useState<any>({});
+  const [user, setUser] = useState<{ id: number; name: string; role: string } | null>(null);
 
-  useEffect(() => {
-    // Get user session first
-    fetch("/api/auth/session")
-      .then((res) => res.json())
-      .then(async (session) => {
-        if (session.user) {
-          setUser(session.user);
-          fetchEcosystems(session.user);
-        }
-      })
-      .catch((error) => {
-        console.error("Error loading data:", error);
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchEcosystems(user);
-    }
-  }, [currentPage, searchTerm, themeFilter, activeFilter]);
-
-  const fetchEcosystems = async (userInfo: any) => {
+  const fetchEcosystems = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -80,37 +56,34 @@ export default function EcosystemsPage() {
         limit: 20,
         totalPages: 1
       });
-        
-      // Load user assignments if admin
-      if (userInfo?.role === 'admin') {
-        const [assignRes, usersRes] = await Promise.all([
-          fetch("/api/user-ecosystems"),
-          fetch("/api/users")
-        ]);
-        
-        const [assignData, usersData] = await Promise.all([
-          assignRes.json(),
-          usersRes.json()
-        ]);
-        
-        setUsers(usersData.list || []);
-        
-        // Group assignments by ecosystem
-        const assignments: any = {};
-        assignData.list?.forEach((assign: any) => {
-          if (!assignments[assign.ecosystem_id]) {
-            assignments[assign.ecosystem_id] = [];
-          }
-          assignments[assign.ecosystem_id].push(assign.user_id);
-        });
-        setUserAssignments(assignments);
-      }
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, themeFilter, activeFilter]);
+
+  useEffect(() => {
+    // Get user session first
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then(async (session) => {
+        if (session.user) {
+          setUser(session.user);
+          fetchEcosystems();
+        }
+      })
+      .catch((error) => {
+        console.error("Error loading data:", error);
+        setLoading(false);
+      });
+  }, [fetchEcosystems]);
+
+  useEffect(() => {
+    if (user) {
+      fetchEcosystems();
+    }
+  }, [user, currentPage, searchTerm, themeFilter, activeFilter, fetchEcosystems]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this ecosystem?")) return;
@@ -123,7 +96,7 @@ export default function EcosystemsPage() {
       if (response.ok) {
         // Refresh the data to get updated pagination
         if (user) {
-          fetchEcosystems(user);
+          fetchEcosystems();
         }
       }
     } catch (error) {

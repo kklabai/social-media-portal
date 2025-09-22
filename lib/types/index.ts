@@ -14,7 +14,7 @@ export interface Ecosystem {
   theme: string;
   description?: string | null;
   active_status: boolean;
-  custom_metadata?: Record<string, any>;
+  custom_metadata?: Record<string, unknown>;
   created_at: string | Date;
   updated_at: string | Date;
   platforms?: SocialMediaPlatform[];
@@ -48,7 +48,7 @@ export interface SocialMediaPlatform {
   verification_status?: string | null;
   notes?: string | null;
   custom_table_name?: string | null;
-  custom_fields?: Record<string, any>;
+  custom_fields?: Record<string, unknown>;
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -88,7 +88,7 @@ export interface CustomFieldDefinition {
   label: string;
   required: boolean;
   options?: string[]; // For dropdown and tags
-  default_value?: any;
+  default_value?: string | number | boolean | Date | null;
   order: number;
 }
 

@@ -1,18 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: number; name: string; role: string } | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState<any>(null);
-  const [ecosystems, setEcosystems] = useState<any[]>([]);
-  const [platforms, setPlatforms] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState<{
+    summary: {
+      totalUsers: number;
+      totalEcosystems: number;
+      activeEcosystems: number;
+      totalPlatforms: number;
+      platformsWithCredentials: number;
+      totpEnabledPlatforms: number;
+    };
+    themes: Array<{ name: string; count: number }>;
+    platformTypes: Array<{ type: string; count: number }>;
+    activeStandardPlatforms: Array<{ platform: string; count: number }>;
+    standardPlatformTypes: string[];
+    matrix: Array<{
+      ecosystemId: number;
+      ecosystemName: string;
+      ecosystemTheme: string;
+      activeStatus: boolean;
+      platforms: Record<string, {
+        configured: boolean;
+        hasCredentials: boolean;
+        totpEnabled: boolean;
+        count: number;
+      }>;
+      totalConfigured: number;
+    }>;
+  } | null>(null);
+  const [ecosystems, setEcosystems] = useState<Array<{ id: number; name: string; theme: string; platform_count: number; user_count: number; active_status?: boolean }>>([]);
+  const [platforms, setPlatforms] = useState<Array<{ 
+    id: number; 
+    platform_name: string; 
+    platform_type: string; 
+    ecosystem_id?: number; 
+    ecosystem?: { name: string }; 
+    username?: string; 
+    password?: string; 
+    totp_enabled?: boolean;
+  }>>([]);
+  const [users, setUsers] = useState<Array<{ id: number; name: string; email: string; ecosystem_count: number; role?: string }>>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +72,7 @@ export default function DashboardPage() {
         if (session.user) {
           setUser(session.user);
           if (session.user.role === 'admin') {
-            fetchStats(session.user);
+            fetchStats();
           } else {
             setLoading(false);
           }
@@ -48,7 +83,7 @@ export default function DashboardPage() {
       .catch(() => router.push("/"));
   }, [router]);
 
-  const fetchStats = async (currentUser?: any) => {
+  const fetchStats = async () => {
     try {
       const res = await fetch('/api/admin/stats');
       if (res.ok) {
@@ -66,7 +101,7 @@ export default function DashboardPage() {
     }
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
@@ -117,20 +152,20 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error loading data:', error);
     }
-  };
+  }, [activeTab, searchTerm, selectedTheme, currentPage]);
 
   useEffect(() => {
     if (user && activeTab !== 'overview') {
       loadData();
     }
-  }, [activeTab, searchTerm, selectedTheme, currentPage]);
+  }, [activeTab, searchTerm, selectedTheme, currentPage, user, loadData]);
 
   // Refresh stats when switching to overview tab
   useEffect(() => {
     if (user?.role === 'admin' && activeTab === 'overview' && stats === null) {
       fetchStats();
     }
-  }, [activeTab, user]);
+  }, [activeTab, user, stats]);
 
   if (loading) {
     return (
@@ -283,7 +318,7 @@ export default function DashboardPage() {
                     Platform Coverage Matrix
                   </h3>
                   <div style={{ fontSize: '13px', color: '#666' }}>
-                    {stats.matrix.filter((eco: any) => 
+                    {stats.matrix.filter((eco) => 
                       eco.ecosystemName.toLowerCase().includes(matrixSearch.toLowerCase()) &&
                       (matrixThemeFilter === 'all' || eco.ecosystemTheme === matrixThemeFilter) &&
                       (matrixPlatformFilter === 'all' || eco.platforms[matrixPlatformFilter]?.configured) &&
@@ -338,7 +373,7 @@ export default function DashboardPage() {
                     }}
                   >
                     <option value="all">All Themes</option>
-                    {stats.themes.map((theme: any) => (
+                    {stats.themes.map((theme) => (
                       <option key={theme.name} value={theme.name}>{theme.name}</option>
                     ))}
                   </select>
@@ -404,7 +439,7 @@ export default function DashboardPage() {
                   </thead>
                   <tbody>
                     {stats.matrix
-                      .filter((eco: any) => {
+                      .filter((eco) => {
                         // Apply search filter
                         if (matrixSearch && !eco.ecosystemName.toLowerCase().includes(matrixSearch.toLowerCase())) {
                           return false;
@@ -423,7 +458,7 @@ export default function DashboardPage() {
                         }
                         return true;
                       })
-                      .map((ecosystem: any) => (
+                      .map((ecosystem) => (
                       <tr key={ecosystem.ecosystemId} style={{ borderBottom: '1px solid #e9ecef' }}>
                         <td style={{
                           padding: '0.75rem',
@@ -504,7 +539,7 @@ export default function DashboardPage() {
                         })}
                       </tr>
                     ))}
-                    {stats.matrix.filter((eco: any) => {
+                    {stats.matrix.filter((eco) => {
                       if (matrixSearch && !eco.ecosystemName.toLowerCase().includes(matrixSearch.toLowerCase())) {
                         return false;
                       }
@@ -550,7 +585,7 @@ export default function DashboardPage() {
                         {stats.activeStandardPlatforms.length}
                       </td>
                       {stats.standardPlatformTypes.map((platformType: string) => {
-                        const platformData = stats.activeStandardPlatforms.find((p: any) => p.platform === platformType);
+                        const platformData = stats.activeStandardPlatforms.find((p) => p.platform === platformType);
                         return (
                           <td
                             key={platformType}
@@ -665,7 +700,7 @@ export default function DashboardPage() {
               }}
             >
               <option value="all">All Themes</option>
-              {stats?.themes.map((theme: any) => (
+              {stats?.themes.map((theme) => (
                 <option key={theme.name} value={theme.name}>{theme.name}</option>
               ))}
             </select>

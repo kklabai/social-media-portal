@@ -16,7 +16,7 @@ export class NocoDBClient {
   }
 
   // Generic CRUD operations
-  async list(tableName: string, params?: any) {
+  async list(tableName: string, params?: Record<string, unknown>) {
     const response = await nocodbApi.get(
       `/db/data/v1/${this.projectId}/${tableName}`,
       { params }
@@ -31,7 +31,7 @@ export class NocoDBClient {
     return response.data;
   }
 
-  async create(tableName: string, data: any) {
+  async create(tableName: string, data: Record<string, unknown>) {
     const response = await nocodbApi.post(
       `/db/data/v1/${this.projectId}/${tableName}`,
       data
@@ -39,7 +39,7 @@ export class NocoDBClient {
     return response.data;
   }
 
-  async update(tableName: string, id: string, data: any) {
+  async update(tableName: string, id: string, data: Record<string, unknown>) {
     const response = await nocodbApi.patch(
       `/db/data/v1/${this.projectId}/${tableName}/${id}`,
       data
@@ -55,7 +55,7 @@ export class NocoDBClient {
   }
 
   // Bulk operations
-  async bulkCreate(tableName: string, data: any[]) {
+  async bulkCreate(tableName: string, data: Record<string, unknown>[]) {
     const response = await nocodbApi.post(
       `/db/data/v1/${this.projectId}/${tableName}/bulk`,
       data
@@ -63,7 +63,7 @@ export class NocoDBClient {
     return response.data;
   }
 
-  async bulkUpdate(tableName: string, data: any[]) {
+  async bulkUpdate(tableName: string, data: Record<string, unknown>[]) {
     const response = await nocodbApi.patch(
       `/db/data/v1/${this.projectId}/${tableName}/bulk`,
       data

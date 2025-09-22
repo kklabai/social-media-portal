@@ -30,7 +30,10 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    let whereClause: any = {};
+    interface WhereClause {
+      user_id?: number;
+    }
+    const whereClause: WhereClause = {};
     if (userId) {
       whereClause.user_id = parseInt(userId);
     } else if (session.user.role !== 'admin') {

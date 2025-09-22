@@ -35,7 +35,11 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
-    const where: any = {};
+    interface WhereClause {
+      OR?: Array<{ email?: { contains: string }; name?: { contains: string }; ecitizen_id?: { contains: string } }>;
+      role?: string;
+    }
+    const where: WhereClause = {};
     
     if (search) {
       where.OR = [
@@ -129,10 +133,10 @@ export async function POST(request: NextRequest) {
     });
     
     return NextResponse.json(user);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating user:", error);
     
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: "User with this email already exists" },
         { status: 400 }

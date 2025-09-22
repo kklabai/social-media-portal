@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { encrypt, decrypt } from '@/lib/utils/encryption';
-import { v4 as uuidv4 } from 'uuid';
 import { buildSearchConditions } from '@/lib/utils/search';
 
 // GET /api/platforms - List platforms for an ecosystem
@@ -30,7 +29,14 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    let where: any = {};
+    interface WhereClause {
+      ecosystem_id?: number;
+      OR?: Array<{ [key: string]: { contains: string } }>;
+      platform_type?: { contains: string };
+      totp_enabled?: boolean;
+    }
+    
+    const where: WhereClause = {};
     
     if (parsedEcosystemId !== undefined) {
       where.ecosystem_id = parsedEcosystemId;
@@ -68,7 +74,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Decrypt sensitive fields
-    const decryptedPlatforms = platforms.map((platform: any) => ({
+    const decryptedPlatforms = platforms.map((platform) => ({
       ...platform,
       username: platform.username ? decrypt(platform.username) : '',
       password: platform.password ? decrypt(platform.password) : '',
@@ -214,7 +220,14 @@ export async function PUT(request: NextRequest) {
         throw new Error('Platform not found');
       }
 
-      const updateData: any = {
+      interface UpdateData {
+        updated_at: Date;
+        username?: string;
+        password?: string;
+        [key: string]: unknown;
+      }
+      
+      const updateData: UpdateData = {
         ...otherFields,
         updated_at: new Date(),
       };

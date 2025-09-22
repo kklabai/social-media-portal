@@ -1,16 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function PlatformEditPage() {
   const params = useParams();
   const router = useRouter();
-  const [platform, setPlatform] = useState<any>(null);
+  interface PlatformData {
+    id: number;
+    platform_name: string;
+    platform_type: string;
+    profile_id?: string;
+    username?: string;
+    password?: string;
+    profile_url?: string;
+    totp_enabled?: boolean;
+    ecosystem_id?: number;
+  }
+  const [platform, setPlatform] = useState<PlatformData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ dbId: number; email: string; role: string } | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,36 +40,7 @@ export default function PlatformEditPage() {
   const [totpQRCode, setTOTPQRCode] = useState("");
   const [totpToken, setTOTPToken] = useState("");
 
-  useEffect(() => {
-    checkPermissions();
-  }, [params.id]);
-
-  const checkPermissions = async () => {
-    try {
-      const sessionRes = await fetch("/api/auth/session");
-      if (!sessionRes.ok) {
-        router.push("/");
-        return;
-      }
-      
-      const session = await sessionRes.json();
-      if (!session.user) {
-        router.push("/");
-        return;
-      }
-      
-      setCurrentUser(session.user);
-      setCheckingAuth(false);
-      
-      // Load platform data and check access
-      await loadPlatformData(session.user);
-    } catch (error) {
-      console.error("Permission check failed:", error);
-      router.push("/");
-    }
-  };
-
-  const loadPlatformData = async (user: any) => {
+  const loadPlatformData = useCallback(async (userData: { dbId: number; role: string }) => {
     try {
       console.log("Loading platform with ID:", params.id);
       const res = await fetch(`/api/platforms/${params.id}`);
@@ -77,18 +60,18 @@ export default function PlatformEditPage() {
         return;
       }
       
-      console.log("User role:", user.role);
-      console.log("User is admin?", user.role === 'admin');
+      console.log("User role:", userData.role);
+      console.log("User is admin?", userData.role === 'admin');
       
       // Check if user has access to this platform
-      if (user.role !== 'admin') {
+      if (userData.role !== 'admin') {
         // For regular users, check if they have access to this ecosystem
-        const ecosystemRes = await fetch(`/api/ecosystems?userId=${user.dbId}`);
+        const ecosystemRes = await fetch(`/api/ecosystems?userId=${userData.dbId}`);
         const ecosystemData = await ecosystemRes.json();
         const userEcosystems = ecosystemData.list || [];
         
         const hasEcosystemAccess = userEcosystems.some(
-          (ue: any) => ue.id === platformData.ecosystem_id
+          (ue: { id: number }) => ue.id === platformData.ecosystem_id
         );
         
         if (!hasEcosystemAccess) {
@@ -115,7 +98,36 @@ export default function PlatformEditPage() {
       setLoading(false);
       router.push("/ecosystems");
     }
-  };
+  }, [router]);
+
+  const checkPermissions = useCallback(async () => {
+    try {
+      const sessionRes = await fetch("/api/auth/session");
+      if (!sessionRes.ok) {
+        router.push("/");
+        return;
+      }
+      
+      const session = await sessionRes.json();
+      if (!session.user) {
+        router.push("/");
+        return;
+      }
+      
+      setCurrentUser(session.user);
+      setCheckingAuth(false);
+      
+      // Load platform data and check access
+      await loadPlatformData(session.user);
+    } catch (error) {
+      console.error("Permission check failed:", error);
+      router.push("/");
+    }
+  }, [router, loadPlatformData]);
+
+  useEffect(() => {
+    checkPermissions();
+  }, [checkPermissions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,7 +189,9 @@ export default function PlatformEditPage() {
       if (res.ok) {
         alert("TOTP enabled successfully!");
         setShowTOTPSetup(false);
-        loadPlatformData(currentUser);
+        if (currentUser) {
+          loadPlatformData(currentUser);
+        }
       } else {
         alert("Invalid token. Please try again.");
       }
@@ -417,7 +431,7 @@ export default function PlatformEditPage() {
               <h3 style={{ fontSize: '18px', marginBottom: '1rem' }}>Setup Two-Factor Authentication</h3>
               
               <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                <img src={totpQRCode} alt="TOTP QR Code" style={{ maxWidth: '200px' }} />
+                <Image src={totpQRCode} alt="TOTP QR Code" width={200} height={200} style={{ maxWidth: '200px', height: 'auto' }} />
               </div>
               
               <p style={{ fontSize: '14px', marginBottom: '0.5rem' }}>

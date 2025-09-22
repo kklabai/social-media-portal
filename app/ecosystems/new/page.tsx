@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function NewEcosystemPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ role: string } | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({
     name: "",

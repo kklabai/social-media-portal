@@ -83,10 +83,10 @@ export async function POST(
         url: platform.profile_url,
         checkedAt: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       return NextResponse.json({
         status: 'error',
-        message: error.message || 'Failed to check link',
+        message: error instanceof Error ? error.message : 'Failed to check link',
         url: platform.profile_url,
         checkedAt: new Date().toISOString(),
       });

@@ -8,7 +8,8 @@ export function buildSearchConditions(search: string, fields: string[]) {
   const searchUpper = search.toUpperCase();
   const searchCapitalized = search.charAt(0).toUpperCase() + search.slice(1).toLowerCase();
   
-  const conditions: any[] = [];
+  type SearchCondition = { [key: string]: { contains: string } };
+  const conditions: SearchCondition[] = [];
   
   fields.forEach(field => {
     // Add conditions for different case variations
@@ -31,7 +32,8 @@ export function buildSearchConditionsStartsWith(search: string, fields: string[]
   const searchUpper = search.toUpperCase();
   const searchCapitalized = search.charAt(0).toUpperCase() + search.slice(1).toLowerCase();
   
-  const conditions: any[] = [];
+  type SearchCondition = { [key: string]: { startsWith: string } };
+  const conditions: SearchCondition[] = [];
   
   fields.forEach(field => {
     conditions.push(

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 const NOCODB_URL = process.env.NEXT_PUBLIC_NOCODB_API_URL;
 const TOKEN = process.env.NOCODB_API_TOKEN;
 const PROJECT_ID = process.env.NEXT_PUBLIC_NOCODB_PROJECT_ID;
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get table list first
     const tablesResponse = await fetch(
@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
     );
     
     const tables = await tablesResponse.json();
-    const userEcosystemsTable = tables.list?.find((t: any) => 
+    const userEcosystemsTable = tables.list?.find((t: { title: string; table_name: string }) => 
       t.title === 'user_ecosystems' || t.table_name === 'user_ecosystems'
     );
     
     if (!userEcosystemsTable) {
-      return NextResponse.json({ error: "user_ecosystems table not found", tables: tables.list?.map((t: any) => ({ id: t.id, title: t.title, table_name: t.table_name })) });
+      return NextResponse.json({ error: "user_ecosystems table not found", tables: tables.list?.map((t: { id: string; title: string; table_name: string }) => ({ id: t.id, title: t.title, table_name: t.table_name })) });
     }
     
     // Get columns for the table
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       table: userEcosystemsTable,
       columns: columns.list || columns,
-      columnSummary: (columns.list || columns || []).map((c: any) => ({
+      columnSummary: (columns.list || columns || []).map((c: { column_name: string; title: string; uidt: string; fk_relation_column_id?: string; fk_related_model_id?: string }) => ({
         column_name: c.column_name,
         title: c.title,
         uidt: c.uidt, // UI data type - this tells us if it's LinkToAnotherRecord
@@ -62,10 +62,10 @@ export async function GET(request: NextRequest) {
       sampleRecord: sampleData.list?.[0] || null,
       instructions: "Look for columns with uidt='LinkToAnotherRecord' - these need special handling"
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Schema check error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to check schema" },
+      { error: (error instanceof Error ? error.message : "Failed to check schema") },
       { status: 500 }
     );
   }

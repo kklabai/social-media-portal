@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
-import { generateTOTPSecret, verifyTOTP } from '@/lib/utils/totp';
-import { encrypt, decrypt } from '@/lib/utils/encryption';
+import { generateTOTPSecret } from '@/lib/utils/totp';
+import { encrypt } from '@/lib/utils/encryption';
 
 // POST /api/platforms/[id]/totp/setup - Generate TOTP secret
 export async function POST(

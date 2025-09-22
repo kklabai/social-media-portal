@@ -7,7 +7,7 @@ import { useSidebar } from "./SidebarContext";
 
 export default function SimpleSidebar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
   const { isCollapsed, setIsCollapsed } = useSidebar();
 
   useEffect(() => {

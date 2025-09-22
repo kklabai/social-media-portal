@@ -4,7 +4,7 @@ const NOCODB_URL = process.env.NEXT_PUBLIC_NOCODB_API_URL;
 const TOKEN = process.env.NOCODB_API_TOKEN;
 const PROJECT_ID = process.env.NEXT_PUBLIC_NOCODB_PROJECT_ID;
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // First, let's get a sample user ecosystem record to see the structure
     const response = await fetch(
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     );
     
     const metaData = await metaResponse.json();
-    const userEcosystemsTable = metaData.list?.find((t: any) => 
+    const userEcosystemsTable = metaData.list?.find((t: { title: string; table_name: string }) => 
       t.title === 'user_ecosystems' || t.table_name === 'user_ecosystems'
     );
 
@@ -39,10 +39,10 @@ export async function GET(request: NextRequest) {
       tableInfo: userEcosystemsTable,
       message: "Check the structure of existing records and table metadata"
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to get data" },
+      { error: error instanceof Error ? error.message : "Failed to get data" },
       { status: 500 }
     );
   }
@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { userId, ecosystemId } = await request.json();
+    console.log("Attempting to create user ecosystem link:", { userId, ecosystemId });
     
     // Try creating with just the basic fields first
     const basicData = {
@@ -109,10 +110,10 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create" },
+      { error: error instanceof Error ? error.message : "Failed to create" },
       { status: 500 }
     );
   }

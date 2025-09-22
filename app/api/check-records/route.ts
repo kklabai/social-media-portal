@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { nocodb, TABLES } from "@/lib/api/nocodb";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get all user_ecosystems records
     const allRecords = await nocodb.list(TABLES.USER_ECOSYSTEMS);
@@ -28,10 +28,10 @@ export async function GET(request: NextRequest) {
         sample: ecosystems.list?.[0] || null
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error checking records:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to check records" },
+      { error: (error instanceof Error ? error.message : "Failed to check records") },
       { status: 500 }
     );
   }

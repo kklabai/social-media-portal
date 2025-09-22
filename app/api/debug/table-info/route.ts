@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     // Try to get columns for the specific table
     const tables = tableResponse.data?.list || [];
-    const targetTable = tables.find((t: any) => t.title === tableName || t.table_name === tableName);
+    const targetTable = tables.find((t: { title: string; table_name: string; id: string }) => t.title === tableName || t.table_name === tableName);
 
     if (targetTable) {
       const columnsResponse = await axios.get(
@@ -58,13 +58,21 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       tableName,
-      tables: tables.map((t: any) => ({ id: t.id, title: t.title, table_name: t.table_name })),
+      tables: tables.map((t: { id: string; title: string; table_name: string }) => ({ id: t.id, title: t.title, table_name: t.table_name })),
       bases: metaResponse.data
     });
-  } catch (error: any) {
-    console.error("Error getting table info:", error.response?.data || error);
+  } catch (error) {
+    if (error instanceof Error && 'response' in error) {
+      const axiosError = error as { response?: { data: unknown }; message: string };
+      console.error("Error getting table info:", axiosError.response?.data || error);
+      return NextResponse.json(
+        { error: "Failed to get table info", details: axiosError.response?.data || axiosError.message },
+        { status: 500 }
+      );
+    }
+    console.error("Error getting table info:", error);
     return NextResponse.json(
-      { error: "Failed to get table info", details: error.response?.data || error.message },
+      { error: "Failed to get table info", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

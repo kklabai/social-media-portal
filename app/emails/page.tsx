@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 export default function EmailsPage() {
@@ -18,11 +18,7 @@ export default function EmailsPage() {
   const [testEmail, setTestEmail] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    checkPermissions();
-  }, []);
-
-  const checkPermissions = async () => {
+  const checkPermissions = useCallback(async () => {
     try {
       const sessionRes = await fetch("/api/auth/session");
       if (!sessionRes.ok) {
@@ -41,7 +37,11 @@ export default function EmailsPage() {
       console.error("Permission check failed:", error);
       router.push("/dashboard");
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkPermissions();
+  }, [checkPermissions]);
 
   if (checkingAuth) {
     return (
@@ -260,10 +260,7 @@ export default function EmailsPage() {
               border: '1px solid #e5e7eb', 
               borderRadius: '6px',
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              ':hover': {
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-              }
+              transition: 'all 0.2s'
             }}>
               <h4 style={{ fontWeight: '600', marginBottom: '0.25rem' }}>Welcome Email</h4>
               <p style={{ fontSize: '13px', color: '#666' }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -11,16 +11,14 @@ interface User {
   ecitizen_id?: string;
   role: string;
   created_at: string;
-  userEcosystems?: any[];
+  userEcosystems?: Array<{ ecosystem: { id: number; name: string } }>;
 }
 
 export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [userEcosystems, setUserEcosystems] = useState<any>({});
-  const [ecosystems, setEcosystems] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ id: number; dbId?: number; role: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,17 +29,7 @@ export default function UsersPage() {
     totalPages: 1
   });
 
-  useEffect(() => {
-    checkPermissions();
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchUsers();
-    }
-  }, [currentPage, searchTerm, roleFilter]);
-
-  const checkPermissions = async () => {
+  const checkPermissions = useCallback(async () => {
     try {
       const sessionRes = await fetch("/api/auth/session");
       if (!sessionRes.ok) {
@@ -56,14 +44,13 @@ export default function UsersPage() {
       }
       
       setCurrentUser(session.user);
-      fetchUsers();
     } catch (error) {
       console.error("Permission check failed:", error);
       router.push("/dashboard");
     }
-  };
+  }, [router]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -94,18 +81,23 @@ export default function UsersPage() {
         totalPages: 1
       });
 
-      // Fetch ecosystems (for assignment display)
-      const ecosysRes = await fetch("/api/ecosystems");
-      if (ecosysRes.ok) {
-        const ecosysData = await ecosysRes.json();
-        setEcosystems(ecosysData.list || []);
-      }
+      // Removed unused ecosystems fetch
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, roleFilter]);
+
+  useEffect(() => {
+    checkPermissions();
+  }, [checkPermissions]);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchUsers();
+    }
+  }, [currentPage, searchTerm, roleFilter, currentUser, fetchUsers]);
 
   if (loading) {
     return (
@@ -262,7 +254,7 @@ export default function UsersPage() {
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
                         {user.userEcosystems && user.userEcosystems.length > 0 ? (
-                          user.userEcosystems.map((ue: any) => (
+                          user.userEcosystems.map((ue) => (
                             <span
                               key={ue.ecosystem.id}
                               style={{

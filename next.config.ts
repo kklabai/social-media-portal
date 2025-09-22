@@ -5,8 +5,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
+  serverExternalPackages: ['@prisma/client', 'prisma'],
+  eslint: {
+    // Only run ESLint on specific directories during production builds
+    dirs: ['app', 'components', 'lib'],
   },
 };
 

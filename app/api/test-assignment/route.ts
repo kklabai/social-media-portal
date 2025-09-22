@@ -83,20 +83,37 @@ export async function POST(request: NextRequest) {
             }
           );
         }
-      } catch (error: any) {
+      } catch (error) {
+        let errorMessage = "Unknown error";
+        if (error instanceof Error && 'response' in error) {
+          const axiosError = error as { response?: { data: unknown }; message: string };
+          errorMessage = (typeof axiosError.response?.data === 'string' ? axiosError.response.data : JSON.stringify(axiosError.response?.data)) || axiosError.message;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        
         results.push({
           approach: approach.name,
           success: false,
-          error: error.response?.data || error.message
+          error: errorMessage
         });
       }
     }
     
     return NextResponse.json({ results });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Test assignment error:", error);
+    
+    let errorDetails = "Unknown error";
+    if (error instanceof Error && 'response' in error) {
+      const axiosError = error as { response?: { data: unknown }; message: string };
+      errorDetails = (typeof axiosError.response?.data === 'string' ? axiosError.response.data : JSON.stringify(axiosError.response?.data)) || axiosError.message;
+    } else if (error instanceof Error) {
+      errorDetails = error.message;
+    }
+    
     return NextResponse.json(
-      { error: "Test failed", details: error.response?.data || error.message },
+      { error: "Test failed", details: errorDetails },
       { status: 500 }
     );
   }
