@@ -468,26 +468,46 @@ export default function DashboardPage() {
                           backgroundColor: 'white',
                           borderRight: '1px solid #e9ecef'
                         }}>
-                          <div>
-                            {ecosystem.ecosystemName}
-                            <span style={{
-                              display: 'block',
-                              fontSize: '10px',
-                              color: '#666',
-                              fontWeight: '400'
-                            }}>
-                              {ecosystem.ecosystemTheme}
-                            </span>
-                          </div>
+                          <Link 
+                            href={`/ecosystems/${ecosystem.ecosystemId}`}
+                            style={{
+                              textDecoration: 'none',
+                              color: 'inherit',
+                              display: 'block'
+                            }}
+                          >
+                            <div>
+                              {ecosystem.ecosystemName}
+                              <span style={{
+                                display: 'block',
+                                fontSize: '10px',
+                                color: '#666',
+                                fontWeight: '400'
+                              }}>
+                                {ecosystem.ecosystemTheme}
+                              </span>
+                            </div>
+                          </Link>
                         </td>
                         <td style={{
                           padding: '0.5rem',
                           textAlign: 'center',
-                          fontWeight: '600',
-                          color: ecosystem.totalConfigured > 15 ? '#28a745' : 
-                                 ecosystem.totalConfigured > 8 ? '#ffc107' : '#6c757d'
+                          fontWeight: '600'
                         }}>
-                          {ecosystem.totalConfigured}
+                          <Link
+                            href={`/ecosystems/${ecosystem.ecosystemId}`}
+                            style={{
+                              textDecoration: 'none',
+                              color: ecosystem.totalConfigured > 15 ? '#28a745' : 
+                                     ecosystem.totalConfigured > 8 ? '#ffc107' : '#6c757d',
+                              display: 'block',
+                              padding: '0.25rem',
+                              borderRadius: '4px',
+                              transition: 'background-color 0.2s'
+                            }}
+                          >
+                            {ecosystem.totalConfigured}
+                          </Link>
                         </td>
                         {stats.standardPlatformTypes.map((platformType: string) => {
                           const platform = ecosystem.platforms[platformType];
@@ -499,38 +519,50 @@ export default function DashboardPage() {
                                 textAlign: 'center',
                                 backgroundColor: platform.configured ? 
                                   (platform.hasCredentials ? '#d4edda' : '#fff3cd') : 
-                                  '#f8f9fa'
+                                  '#f8f9fa',
+                                cursor: platform.configured ? 'pointer' : 'default'
                               }}
                             >
                               {platform.configured ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                                  <span style={{
-                                    fontSize: '16px',
-                                    color: platform.hasCredentials ? '#28a745' : '#ffc107'
-                                  }}>
-                                    {platform.hasCredentials ? '✓' : '○'}
-                                  </span>
-                                  {platform.totpEnabled && (
+                                <Link
+                                  href={`/ecosystems/${ecosystem.ecosystemId}?platform=${encodeURIComponent(platformType)}`}
+                                  style={{
+                                    textDecoration: 'none',
+                                    display: 'block',
+                                    padding: '0.25rem',
+                                    borderRadius: '4px',
+                                    transition: 'opacity 0.2s'
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                                     <span style={{
-                                      fontSize: '10px',
-                                      color: '#17a2b8',
-                                      fontWeight: '600'
+                                      fontSize: '16px',
+                                      color: platform.hasCredentials ? '#28a745' : '#ffc107'
                                     }}>
-                                      2FA
+                                      {platform.hasCredentials ? '✓' : '○'}
                                     </span>
-                                  )}
-                                  {platform.count > 1 && (
-                                    <span style={{
-                                      fontSize: '10px',
-                                      color: '#666',
-                                      backgroundColor: '#e9ecef',
-                                      padding: '1px 4px',
-                                      borderRadius: '8px'
-                                    }}>
-                                      {platform.count}
-                                    </span>
-                                  )}
-                                </div>
+                                    {platform.totpEnabled && (
+                                      <span style={{
+                                        fontSize: '10px',
+                                        color: '#17a2b8',
+                                        fontWeight: '600'
+                                      }}>
+                                        2FA
+                                      </span>
+                                    )}
+                                    {platform.count > 1 && (
+                                      <span style={{
+                                        fontSize: '10px',
+                                        color: '#666',
+                                        backgroundColor: '#e9ecef',
+                                        padding: '1px 4px',
+                                        borderRadius: '8px'
+                                      }}>
+                                        {platform.count}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Link>
                               ) : (
                                 <span style={{ color: '#dee2e6', fontSize: '14px' }}>-</span>
                               )}

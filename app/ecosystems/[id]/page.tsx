@@ -1,18 +1,19 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function EcosystemDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [ecosystem, setEcosystem] = useState<{ id: number; name: string; theme: string; description?: string; active_status?: boolean } | null>(null);
   const [platforms, setPlatforms] = useState<Array<{ id: number; Id?: number; platform_name: string; platform_type: string; username?: string; password?: string; profile_url?: string; totp_enabled: boolean }>>([]);
   const [loading, setLoading] = useState(true);
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
   const [user, setUser] = useState<{ id: number; role: string } | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('platform') || "");
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
     total: 0,
