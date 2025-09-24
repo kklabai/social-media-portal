@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   social-media-portal:
     build:
@@ -6,11 +7,11 @@ services:
       dockerfile: Dockerfile
     container_name: social-media-portal
     restart: unless-stopped
-    ports:
-      - "3000:3000"  # ADD THIS LINE
+    expose:
+      - "3000"  # Only expose to other containers, not host
     environment:
       - NODE_ENV=production
-      - HOSTNAME=0.0.0.0  # ADD THIS LINE
+      - HOSTNAME=0.0.0.0
       - DATABASE_URL=file:/app/data/prod.db
       - NANDI_SSO_URL=${NANDI_SSO_URL}
       - NANDI_APP_ID=${NANDI_APP_ID}
@@ -21,13 +22,15 @@ services:
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
+    networks:
+      - coolify
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-  
+
   backup:
     image: alpine:latest
     container_name: social-media-backup
@@ -43,3 +46,9 @@ services:
       crond -f
       "
     restart: unless-stopped
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
