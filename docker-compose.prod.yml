@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   social-media-portal:
     build:
@@ -7,19 +6,23 @@ services:
       dockerfile: Dockerfile
     container_name: social-media-portal
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
       - DATABASE_URL=file:/app/data/prod.db
       - NANDI_SSO_URL=${NANDI_SSO_URL}
       - NANDI_APP_ID=${NANDI_APP_ID}
       - NANDI_RETURN_URL=${NANDI_RETURN_URL}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXT_PUBLIC_AUTH_URL=${NEXT_PUBLIC_AUTH_URL}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
-    networks:
-      - internal
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
       interval: 30s
@@ -27,36 +30,7 @@ services:
       retries: 3
       start_period: 40s
 
-  nginx:
-    image: nginx:alpine
-    container_name: social-media-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./certbot/www:/var/www/certbot:ro
-    depends_on:
-      social-media-portal:
-        condition: service_healthy
-    networks:
-      - internal
-      - external
-
-  # Optional: Certbot for SSL certificates
-  certbot:
-    image: certbot/certbot
-    container_name: social-media-certbot
-    volumes:
-      - ./nginx/ssl:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    command: certonly --webroot --webroot-path=/var/www/certbot --email ${ADMIN_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN}
-    networks:
-      - external
-
-  # Optional: Backup service
+  # Optional: Backup service (keeping this as it's useful)
   backup:
     image: alpine:latest
     container_name: social-media-backup
@@ -72,12 +46,3 @@ services:
       crond -f
       "
     restart: unless-stopped
-    networks:
-      - internal
-
-networks:
-  internal:
-    driver: bridge
-    internal: true
-  external:
-    driver: bridge
