@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function PlatformEditPage() {
   const params = useParams();
@@ -37,7 +36,6 @@ export default function PlatformEditPage() {
   // TOTP states
   const [showTOTPSetup, setShowTOTPSetup] = useState(false);
   const [totpSecret, setTOTPSecret] = useState("");
-  const [totpQRCode, setTOTPQRCode] = useState("");
   const [totpToken, setTOTPToken] = useState("");
 
   const loadPlatformData = useCallback(async (userData: { dbId: number; role: string }) => {
@@ -156,48 +154,44 @@ export default function PlatformEditPage() {
     }
   };
 
-  const setupTOTP = async () => {
-    try {
-      const res = await fetch(`/api/platforms/${params.id}/totp/setup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userEmail: currentUser?.email,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setTOTPSecret(data.secret);
-        setTOTPQRCode(data.qrCode);
-        setShowTOTPSetup(true);
-      }
-    } catch (error) {
-      console.error("Error setting up TOTP:", error);
-      alert("Failed to setup TOTP");
-    }
+  const setupTOTP = () => {
+    // Clear any previous values
+    setTOTPSecret("");
+    setTOTPToken("");
+    setShowTOTPSetup(true);
   };
 
   const verifyAndEnableTOTP = async () => {
+    if (!totpSecret.trim()) {
+      alert("Please enter the 2FA secret key");
+      return;
+    }
+
     try {
       const res = await fetch(`/api/platforms/${params.id}/totp/verify`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: totpToken }),
+        body: JSON.stringify({ 
+          secret: totpSecret,
+          token: totpToken 
+        }),
       });
 
       if (res.ok) {
-        alert("TOTP enabled successfully!");
+        alert("2FA secret stored successfully!");
         setShowTOTPSetup(false);
+        setTOTPSecret("");
+        setTOTPToken("");
         if (currentUser) {
           loadPlatformData(currentUser);
         }
       } else {
-        alert("Invalid token. Please try again.");
+        const error = await res.text();
+        alert(error || "Failed to store 2FA secret. Please check the secret and try again.");
       }
     } catch (error) {
-      console.error("Error verifying TOTP:", error);
-      alert("Failed to verify TOTP");
+      console.error("Error storing TOTP secret:", error);
+      alert("Failed to store 2FA secret");
     }
   };
 
@@ -372,7 +366,7 @@ export default function PlatformEditPage() {
           marginBottom: '2rem'
         }}>
           <h2 style={{ fontSize: '18px', marginBottom: '1.5rem', fontWeight: '600' }}>
-            Two-Factor Authentication (TOTP)
+            Platform 2FA Secret
           </h2>
           
           {platform?.totp_enabled ? (
@@ -382,12 +376,12 @@ export default function PlatformEditPage() {
               borderRadius: '4px',
               color: '#155724'
             }}>
-              ✓ TOTP is enabled for this platform
+              ✓ 2FA secret is stored for this platform
             </div>
           ) : (
             <div>
               <p style={{ marginBottom: '1rem', color: '#666' }}>
-                Enable two-factor authentication for additional security
+                Store the platform&apos;s 2FA secret to generate codes
               </p>
               <button
                 type="button"
@@ -401,7 +395,7 @@ export default function PlatformEditPage() {
                   cursor: 'pointer'
                 }}
               >
-                Enable TOTP
+                Add 2FA Secret
               </button>
             </div>
           )}
@@ -428,30 +422,35 @@ export default function PlatformEditPage() {
               maxWidth: '400px',
               width: '90%'
             }}>
-              <h3 style={{ fontSize: '18px', marginBottom: '1rem' }}>Setup Two-Factor Authentication</h3>
+              <h3 style={{ fontSize: '18px', marginBottom: '1rem' }}>Store Platform&apos;s 2FA Secret</h3>
               
-              <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                <Image src={totpQRCode} alt="TOTP QR Code" width={200} height={200} style={{ maxWidth: '200px', height: 'auto' }} />
-              </div>
-              
-              <p style={{ fontSize: '14px', marginBottom: '0.5rem' }}>
-                Manual entry code:
+              <p style={{ fontSize: '14px', marginBottom: '1rem', color: '#666' }}>
+                Enter the 2FA secret key from {platform?.platform_name || 'the platform'}. This is usually shown when you enable 2FA on the platform.
               </p>
-              <code style={{ 
-                display: 'block', 
-                padding: '0.5rem', 
-                backgroundColor: '#f5f5f5',
-                borderRadius: '4px',
-                marginBottom: '1rem',
-                fontSize: '12px',
-                wordBreak: 'break-all'
-              }}>
-                {totpSecret}
-              </code>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  2FA Secret Key
+                </label>
+                <input
+                  type="text"
+                  value={totpSecret}
+                  onChange={(e) => setTOTPSecret(e.target.value)}
+                  placeholder="Enter the secret key (e.g., JBSWY3DPEHPK3PXP)"
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
               
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                  Enter verification code
+                  Test with current code (optional)
                 </label>
                 <input
                   type="text"
@@ -498,7 +497,7 @@ export default function PlatformEditPage() {
                     cursor: 'pointer'
                   }}
                 >
-                  Verify & Enable
+                  Save Secret
                 </button>
               </div>
             </div>

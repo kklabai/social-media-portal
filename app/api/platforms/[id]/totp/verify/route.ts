@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { verifyTOTP } from '@/lib/utils/totp';
-import { decrypt } from '@/lib/utils/encryption';
+import { encrypt } from '@/lib/utils/encryption';
 
-// PUT /api/platforms/[id]/totp/verify - Verify and enable TOTP
+// PUT /api/platforms/[id]/totp/verify - Store the platform's TOTP secret
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -34,7 +34,14 @@ export async function PUT(
     
     const { id } = await params;
     const body = await request.json();
-    const { token } = body;
+    const { secret, token } = body;
+
+    if (!secret || !secret.trim()) {
+      return NextResponse.json(
+        { error: 'Secret key is required' },
+        { status: 400 }
+      );
+    }
 
     // Verify user has access to this platform
     const platform = await prisma.socialMediaPlatform.findUnique({
@@ -67,27 +74,22 @@ export async function PUT(
       );
     }
     
-    if (!platform.totp_secret) {
-      return NextResponse.json(
-        { error: 'TOTP setup not initiated' },
-        { status: 400 }
-      );
+    // If a token is provided, verify it with the secret
+    if (token && token.trim()) {
+      const isValid = verifyTOTP(token, secret);
+      if (!isValid) {
+        return NextResponse.json(
+          { error: 'Invalid verification code. Please check the secret and try again.' },
+          { status: 400 }
+        );
+      }
     }
 
-    const decryptedSecret = decrypt(platform.totp_secret);
-    const isValid = verifyTOTP(token, decryptedSecret);
-
-    if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid TOTP token' },
-        { status: 400 }
-      );
-    }
-
-    // Enable TOTP
+    // Store the encrypted secret
     await prisma.socialMediaPlatform.update({
       where: { id: parseInt(id) },
       data: {
+        totp_secret: encrypt(secret),
         totp_enabled: true,
         updated_at: new Date(),
       }
